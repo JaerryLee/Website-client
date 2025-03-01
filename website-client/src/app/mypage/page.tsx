@@ -31,7 +31,7 @@ interface ProfileResponse {
   student_number: string;
   position_names: string[];
   profile_image: string;
-  join_date: string; // "YYYY-MM-DD"
+  join_date: string;
 }
 
 interface PointHistoryItem {
