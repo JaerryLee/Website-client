@@ -10,57 +10,43 @@ interface ModalActivitySettingProps {
   onSave: (updated: string[]) => void;
 }
 
+const availableAuthorities = [
+  'PointManager',
+  'CalendarManager',
+  'AttendanceManager',
+  'RoleManager',
+  'AuthorityManager',
+];
+
 export default function ModalActivitySetting({
   isOpen,
   onClose,
-  activeTab,
   member,
   onSave,
 }: ModalActivitySettingProps) {
-  // 모달에서 편집할 활동 목록
-  const [activityList, setActivityList] = useState<string[]>([]);
-  const [newItem, setNewItem] = useState('');
+  // 로컬 상태: 선택된 권한 목록
+  const [selectedAuthorities, setSelectedAuthorities] = useState<string[]>([]);
 
-  // 모달이 열릴 때, member의 현재 활동 목록을 가져와 state에 복사
+  // 모달이 열릴 때 기존 권한 정보를 초기값으로 설정 (member 객체에 권한 정보가 있다면 사용)
+  // 현재 MemberData에는 activities가 없으므로 기본값은 빈 배열로 시작합니다.
   useEffect(() => {
-    if (!isOpen) return; 
-    if (!member.activities) return;
-    let currentList: string[] = [];
-    if (activeTab === 'fetch') {
-      currentList = member.activities.fetch;
-    } else if (activeTab === 'worktree') {
-      currentList = member.activities.worktree;
-    } else if (activeTab === 'branch') {
-      currentList = member.activities.branch;
-    } else if (activeTab === 'solution challenge') {
-      currentList = member.activities.solutionChallenge;
+    if (!isOpen) return;
+    // 만약 member에 기존 권한 정보가 있다면 이를 사용하도록 수정할 수 있습니다.
+    setSelectedAuthorities([]);
+  }, [isOpen, member]);
+
+  if (!isOpen) return null;
+
+  const handleCheckboxChange = (authority: string, checked: boolean) => {
+    if (checked) {
+      setSelectedAuthorities([...selectedAuthorities, authority]);
+    } else {
+      setSelectedAuthorities(selectedAuthorities.filter((a) => a !== authority));
     }
-    setActivityList(currentList || []);
-    setNewItem('');
-  }, [isOpen, activeTab, member]);
-
-  if (!isOpen) {
-    return null;
-  }
-
-  // 항목 추가
-  const handleAddItem = () => {
-    if (!newItem.trim()) return;
-    setActivityList([...activityList, newItem.trim()]);
-    setNewItem('');
   };
 
-  // 항목 삭제
-  const handleRemoveItem = (index: number) => {
-    const updated = [...activityList];
-    updated.splice(index, 1);
-    setActivityList(updated);
-  };
-
-  // 저장
   const handleSave = () => {
-    // 상위로 넘김
-    onSave(activityList);
+    onSave(selectedAuthorities);
   };
 
   return (
@@ -68,29 +54,23 @@ export default function ModalActivitySetting({
       <div className="modal-activity-setting-content">
         <button className="close-btn" onClick={onClose}>✕</button>
         
-        <h2>활동 관리 설정 ({activeTab})</h2>
+        <h2>권한 관리 설정</h2>
 
         <div className="setting-body">
-          {/* 기존 목록 */}
-          <ul className="item-list">
-            {activityList.map((item, idx) => (
+          <ul className="authority-list">
+            {availableAuthorities.map((auth, idx) => (
               <li key={idx}>
-                <span>{item}</span>
-                <button onClick={() => handleRemoveItem(idx)}>×</button>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={selectedAuthorities.includes(auth)}
+                    onChange={(e) => handleCheckboxChange(auth, e.target.checked)}
+                  />
+                  {auth}
+                </label>
               </li>
             ))}
           </ul>
-
-          {/* 새 항목 추가 */}
-          <div className="add-row">
-            <input
-              type="text"
-              placeholder="새 항목 입력"
-              value={newItem}
-              onChange={(e) => setNewItem(e.target.value)}
-            />
-            <button onClick={handleAddItem}>추가하기</button>
-          </div>
         </div>
 
         <div className="modal-buttons">
